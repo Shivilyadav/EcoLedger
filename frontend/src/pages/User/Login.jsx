@@ -18,6 +18,7 @@ const Login = () => {
 
     const [isRegister, setIsRegister] = useState(false);
     const [fullName, setFullName] = useState('');
+    const [phone, setPhone] = useState('');
 
     const handleAuth = async (e) => {
         e.preventDefault();
@@ -29,7 +30,7 @@ const Login = () => {
         try {
             const endpoint = isRegister ? '/api/register' : '/api/login';
             const body = isRegister 
-                ? { full_name: fullName, identifier, password }
+                ? { full_name: fullName, phone, password }
                 : { identifier, password };
 
             const res = await fetch(apiUrl(endpoint), {
@@ -47,6 +48,7 @@ const Login = () => {
                 setIsRegister(false);
                 setInfo(t('registration_submitted_await_key'));
                 setFullName('');
+                setPhone('');
                 setPassword('');
                 return;
             }
@@ -80,7 +82,7 @@ const Login = () => {
                 </div>
 
                 <form onSubmit={handleAuth} className="space-y-8">
-                    {isRegister && (
+                    {isRegister ? (
                         <motion.div 
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
@@ -95,30 +97,51 @@ const Login = () => {
                                 className="w-full bg-emerald-950/40 border border-emerald-500/10 rounded-[1.75rem] py-5 px-8 focus:border-emerald-500/40 transition-all outline-none text-white font-medium"
                                 placeholder={t('full_name')}
                             />
+                            <input
+                                type="tel"
+                                required
+                                value={phone}
+                                onFocus={() => speakAction('focus_phone')}
+                                onChange={(e) => setPhone(e.target.value)}
+                                className="w-full bg-emerald-950/40 border border-emerald-500/10 rounded-[1.75rem] py-5 px-8 focus:border-emerald-500/40 transition-all outline-none text-white font-medium"
+                                placeholder={t('phone_number') || 'Phone Number'}
+                            />
+                            <input
+                                type="password"
+                                required
+                                value={password}
+                                onFocus={() => speakAction('focus_password')}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full bg-emerald-950/40 border border-emerald-500/10 rounded-[1.75rem] py-5 px-8 focus:border-emerald-500/40 transition-all outline-none text-white font-medium"
+                                placeholder={t('password')}
+                            />
                         </motion.div>
+                    ) : (
+                        <>
+                            <div className="space-y-3">
+                                <input
+                                    type="text"
+                                    required
+                                    value={identifier}
+                                    onFocus={() => speakAction('focus_identifier')}
+                                    onChange={(e) => setIdentifier(e.target.value)}
+                                    className="w-full bg-emerald-950/40 border border-emerald-500/10 rounded-[1.75rem] py-5 px-8 focus:border-emerald-500/40 transition-all outline-none text-white font-medium"
+                                    placeholder={t('assigned_key')}
+                                />
+                            </div>
+                            <div className="space-y-3">
+                                <input
+                                    type="password"
+                                    required
+                                    value={password}
+                                    onFocus={() => speakAction('focus_password')}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full bg-emerald-950/40 border border-emerald-500/10 rounded-[1.75rem] py-5 px-8 focus:border-emerald-500/40 transition-all outline-none text-white font-medium"
+                                    placeholder={t('password')}
+                                />
+                            </div>
+                        </>
                     )}
-                    <div className="space-y-3">
-                        <input
-                            type="text"
-                            required
-                            value={identifier}
-                            onFocus={() => speakAction('focus_identifier')}
-                            onChange={(e) => setIdentifier(e.target.value)}
-                            className="w-full bg-emerald-950/40 border border-emerald-500/10 rounded-[1.75rem] py-5 px-8 focus:border-emerald-500/40 transition-all outline-none text-white font-medium"
-                            placeholder={t('assigned_key')}
-                        />
-                    </div>
-                    <div className="space-y-3">
-                        <input
-                            type="password"
-                            required
-                            value={password}
-                            onFocus={() => speakAction('focus_password')}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full bg-emerald-950/40 border border-emerald-500/10 rounded-[1.75rem] py-5 px-8 focus:border-emerald-500/40 transition-all outline-none text-white font-medium"
-                            placeholder={t('password')}
-                        />
-                    </div>
 
                     {error && <p className="text-red-400 text-xs font-bold text-center">{error}</p>}
                     {info && <p className="text-emerald-300 text-xs font-bold text-center">{info}</p>}
@@ -130,7 +153,11 @@ const Login = () => {
                         
                         <button 
                             type="button"
-                            onClick={() => setIsRegister(!isRegister)}
+                            onClick={() => {
+                                const next = !isRegister;
+                                setIsRegister(next);
+                                if (next) speakAction('register_intro');
+                            }}
                             className="text-emerald-400/60 font-bold text-sm hover:text-emerald-400 transition-colors"
                         >
                             {isRegister ? t('already_have_account') : t('new_here_join_picker')}

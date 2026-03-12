@@ -1,0 +1,13 @@
+{
+  "name": "ecoledger-email-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "nodemailer": "^6.9.12"
+  }
+}

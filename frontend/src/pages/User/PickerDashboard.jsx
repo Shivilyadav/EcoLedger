@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Leaf, Award, Activity, Wallet, Sparkles, ExternalLink, Zap, Shield, QrCode } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Leaf, Award, Activity, Wallet, Sparkles, ExternalLink, Zap, Shield, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { API_BASE_URL } from '../../lib/api';
+import { apiUrl } from '../../lib/api';
 
 const GRADE_COLORS = { 'A+': '#4ade80', A: '#86efac', B: '#facc15', C: '#fb923c', D: '#f87171' };
 
@@ -13,6 +13,8 @@ const PickerDashboard = () => {
     const [tokens, setTokens]           = useState([]);
     const [payments, setPayments]       = useState([]);
     const [loadingTokens, setLoadingTokens] = useState(true);
+    const [refreshing, setRefreshing]   = useState(false);
+    const [lastUpdated, setLastUpdated] = useState(null);
 
     useEffect(() => {
         const stored = localStorage.getItem('ecoledger_user');
@@ -21,9 +23,8 @@ const PickerDashboard = () => {
                 const u = JSON.parse(stored);
                 setUser(u);
                 fetchData(u);
-                
-                // Auto-refresh every 30 seconds for live payment sync
-                const interval = setInterval(() => fetchData(u), 30000);
+                // Auto-refresh every 8 seconds so agent transfers appear live
+                const interval = setInterval(() => fetchData(u), 8000);
                 return () => clearInterval(interval);
             } catch (e) {
                 console.error("Failed to parse picker user", e);
@@ -34,37 +35,33 @@ const PickerDashboard = () => {
         }
     }, []);
 
-    const fetchData = async (u) => {
+    const fetchData = useCallback(async (u, manual = false) => {
         if (!u) return;
+        if (manual) setRefreshing(true);
         try {
-            const wallet = u.wallet_address || u.user_id || '1';
+            const wallet    = u.wallet_address || u.user_id || '1';
+            const picker_id = u.user_id || 'anonymous_picker';
 
-            // Fetch credit score
-            const scoreRes = await fetch(`${API_BASE_URL}/green-credit-score/${wallet}`);
-            if (scoreRes.ok) {
-                const scoreData = await scoreRes.json();
-                setCreditScore(scoreData);
-            }
+            // Fetch credit score — note the /api/ prefix
+            const scoreRes = await fetch(apiUrl(`/api/green-credit-score/${encodeURIComponent(wallet)}`));
+            if (scoreRes.ok) setCreditScore(await scoreRes.json());
 
             // Fetch minted tokens
-            const tokenRes = await fetch(`${API_BASE_URL}/my-tokens/${wallet}`);
-            if (tokenRes.ok) {
-                const tokenData = await tokenRes.json();
-                setTokens(tokenData.tokens || []);
-            }
+            const tokenRes = await fetch(apiUrl(`/my-tokens/${encodeURIComponent(wallet)}`));
+            if (tokenRes.ok) setTokens((await tokenRes.json()).tokens || []);
 
-            // Fetch payments
-            const payRes = await fetch(`${API_BASE_URL}/api/picker/payments?picker_id=${u.user_id || 'anonymous_picker'}`);
-            if (payRes.ok) {
-                const payData = await payRes.json();
-                setPayments(payData.payments || []);
-            }
+            // Fetch payments by picker_id (same key agent used)
+            const payRes = await fetch(apiUrl(`/api/picker/payments?picker_id=${encodeURIComponent(picker_id)}`));
+            if (payRes.ok) setPayments((await payRes.json()).payments || []);
+
+            setLastUpdated(new Date());
         } catch (e) {
             console.warn('Dashboard fetch error:', e);
         } finally {
             setLoadingTokens(false);
+            setRefreshing(false);
         }
-    };
+    }, []);
 
     const getDisplayName = (u) => {
         const raw = u?.full_name ?? u?.company_name ?? 'Environmentalist';
@@ -99,10 +96,23 @@ const PickerDashboard = () => {
             {/* ── Hero ── */}
             <div className="grid md:grid-cols-3 gap-8 items-start">
                 <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} className="md:col-span-3">
-                    <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center gap-3 mb-4 flex-wrap">
                         <span className="px-4 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-black text-[10px] uppercase tracking-widest rounded-full flex items-center gap-2">
                             <Sparkles className="w-3 h-3" /> {t('real_time_impact')}
                         </span>
+                        {/* Live sync badge */}
+                        <span className="px-4 py-1 bg-emerald-900/40 border border-emerald-500/10 text-emerald-400/70 font-black text-[10px] uppercase tracking-widest rounded-full flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                            Live · {lastUpdated ? lastUpdated.toLocaleTimeString() : '…'}
+                        </span>
+                        {/* Manual refresh */}
+                        <button
+                            onClick={() => user && fetchData(user, true)}
+                            disabled={refreshing}
+                            className="ml-auto px-4 py-1 bg-white/5 border border-white/10 text-white/40 hover:text-white hover:border-emerald-500/30 font-black text-[10px] uppercase tracking-widest rounded-full flex items-center gap-2 transition-all disabled:opacity-40"
+                        >
+                            <RefreshCw className={`w-3 h-3 ${refreshing ? 'animate-spin' : ''}`} /> Refresh
+                        </button>
                     </div>
                     <h2 className="text-7xl font-black text-white tracking-tighter leading-none mb-6">
                         {t('hello')}, <br />

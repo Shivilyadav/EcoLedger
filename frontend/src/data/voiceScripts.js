@@ -2,7 +2,7 @@ export const voiceScripts = {
     en: {
         home_intro: "Welcome to EcoLedger. Please choose your portal to continue. Are you a Waste Picker, a Field Agent, or an Organization?",
         user_home_intro: "Welcome to the Picker portal. Start collecting plastic or explore the marketplace.",
-        user_login_intro: "If you are already a user, login with your assigned key. If you are a new user, please register.",
+        user_login_intro: "If you are already a user, enter your assigned key to login. If you are new here, tap the register button to sign up with your name, phone number, and password.",
         user_dashboard_intro: "This is your impact dashboard with tokens and payments.",
         user_upload_intro: "Upload a photo to scan plastic with AI and mint rewards.",
         user_marketplace_intro: "Browse available green credit batches in the marketplace.",
@@ -18,6 +18,8 @@ export const voiceScripts = {
         focus_password: "Now type your secret password here.",
         click_login: "Checking your details. Please wait.",
         focus_name: "Please enter your full name here.",
+        focus_phone: "Enter your mobile phone number here. We will use this to identify your account.",
+        register_intro: "Please fill in your full name, your phone number, and choose a password to create your account.",
         click_register: "Creating your account. Please wait.",
 
 
@@ -25,12 +27,13 @@ export const voiceScripts = {
         scanning: "Our AI is analyzing the plastic. Hold on.",
         scan_success: "Plastic verified successfully! You have earned rewards.",
         mint_success: "NFT minted successfully. Your contribution has been recorded in your dashboard.",
+        nft_minted: "Credits transferred successfully! The picker's dashboard will update in moments.",
         success: "NFT minted successfully. Your contribution has been recorded in your dashboard."
     },
     hi: {
         home_intro: "Eco Ledger me aapka swagat hai. Kripya apna portal chunein. Kya aap kooda beenane vale hain, ek Field Agent hain, ya koi sanstha?",
         user_home_intro: "Picker portal me swagat hai. Plastic sangrah shuru karein ya marketplace dekhein.",
-        user_login_intro: "Yadi aap pehle se user hain, toh apne assigned key se login karein. Naye user hain, toh register karein.",
+        user_login_intro: "Agar aap pehle se user hain, toh apni assigned key se login karein. Naye user hain, toh register button dabayein aur apna naam, phone number aur password bhare.",
         user_dashboard_intro: "Yah aapka impact dashboard hai jahan tokens aur payments dikhte hain.",
         user_upload_intro: "Plastic ki photo upload karke AI scan aur rewards prapt karein.",
         user_marketplace_intro: "Marketplace me green credits ki batches dekhein.",
@@ -46,6 +49,8 @@ export const voiceScripts = {
         focus_password: "Ab yahan apna gupt password darj karein.",
         click_login: "Aapke vivaran ki jaanch ho rahi hai. Kripya pratiksha karein.",
         focus_name: "Kripya apna pura naam darj karein.",
+        focus_phone: "Apna mobile phone number yahan darj karein. Hum iska upyog aapka account pehchanne ke liye karenge.",
+        register_intro: "Kripya apna pura naam, phone number, aur ek password bhare apna account banane ke liye.",
         click_register: "Aapka account ban raha hai. Kripya pratiksha karein.",
 
 
@@ -53,12 +58,13 @@ export const voiceScripts = {
         scanning: "Hamara AI plastic ki jaanch kar raha hai. Kripya rukein.",
         scan_success: "Plastic safaltapoorvak check ho gaya! Aapko inaam mila hai.",
         mint_success: "NFT safaltapoorvak mint ho gaya. Aapka yogdan dashboard me dikh raha hai.",
+        nft_minted: "Credits safaltapoorvak transfer ho gaye! Picker ka dashboard kuch hi pal mein update ho jayega.",
         success: "NFT safaltapoorvak mint ho gaya. Aapka yogdan dashboard me dikh raha hai."
     },
     mr: {
         home_intro: "Eco Ledger madhye aaple swagat aahe. Kripya tumche portal nivada. Tumhi kacara vecaka aahat, Field Agent aahat, ki ek sanstha?",
         user_home_intro: "Picker portal madhye swagat aahe. Plastic sangrah suru kara kinva marketplace bagha.",
-        user_login_intro: "Jap tumhi aadhi pasun user aahat, tar tumchya assigned key ne login kara. Navin user aslyas, register kara.",
+        user_login_intro: "Jari tumhi aadhi pasun user aahat, tar tumchya assigned key ne login kara. Navin user aslyas, register button daba ani tumche naav, phone number ani password bhara.",
         user_dashboard_intro: "He tumche impact dashboard aahe jithe tokens ani payments dakhavle jatat.",
         user_upload_intro: "AI scan sathi photo upload kara ani rewards milava.",
         user_marketplace_intro: "Marketplace madhye green credit batches bagha.",
@@ -74,6 +80,8 @@ export const voiceScripts = {
         focus_password: "Ata tumcha gupt password yethe taka.",
         click_login: "Tumchi mahiti tapasat aahe. Kripya pratiksha kara.",
         focus_name: "Kripya tumche purna naav taka.",
+        focus_phone: "Tumcha mobile phone number yethe taka. Aamhi tyacha upyog tumche account olakhanyasathi karoo.",
+        register_intro: "Kripya tumche purna naav, phone number, ani ek password bhara tumche account tayar karanya sathi.",
         click_register: "Tumche account tayar hot aahe. Kripya pratiksha kara.",
 
 
@@ -81,6 +89,7 @@ export const voiceScripts = {
         scanning: "Aamche AI plastic check karat aahe. Kripya thamba.",
         scan_success: "Plastic yashasvi ritine check zhale! Tumhala bakshis milale aahe.",
         mint_success: "NFT yashasvi ritine mint zhale. Tumcha yogdan dashboard madhe dakhavla jaeel.",
+        nft_minted: "Credits yashasvi ritine transfer zhale! Picker cha dashboard kahya kshanant update hoil.",
         success: "NFT yashasvi ritine mint zhale. Tumcha yogdan dashboard madhe dakhavla jaeel."
     }
 };

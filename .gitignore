@@ -20,3 +20,9 @@ Thumbs.db
 .vscode/
 .idea/
 
+### Root Assets / Misc
+*.jpg
+*.jpeg
+*.avif
+preview.html
+
