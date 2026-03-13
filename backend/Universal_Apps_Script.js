@@ -103,6 +103,12 @@ function doPost(e) {
                }
              }
              return jsonResponse({ ok: true, found: true, data: { id: assignedKey, user_id: rowUserId, full_name: displayName || rowUserId, verifying_id: rowKey } });
+           } else if (role === "agent" && rowUserId) {
+             // Agents can be stored in the Assignments sheet as well:
+             // - Column C (user_id) = agent_id
+             // - Column E (full_name) = agent name (optional)
+             var agentName = rowName ? rowName.toString().trim() : "";
+             return jsonResponse({ ok: true, found: true, data: { id: assignedKey, agent_id: rowUserId, full_name: agentName || rowUserId, verifying_id: rowKey } });
            }
         }
       }

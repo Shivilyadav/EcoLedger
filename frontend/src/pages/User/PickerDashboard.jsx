@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Leaf, Award, Activity, Wallet, Sparkles, ExternalLink, Zap, Shield, RefreshCw } from 'lucide-react';
+import { Leaf, Award, Activity, Wallet, Sparkles, ExternalLink, Zap, Shield, RefreshCw, Scan, Store } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiUrl } from '../../lib/api';
 
@@ -131,6 +132,51 @@ const PickerDashboard = () => {
                         </div>
                     </div>
                 </motion.div>
+            </div>
+
+            {/* ── Quick Actions ── */}
+            <div className="grid md:grid-cols-2 gap-8">
+                <Link to="/user/upload">
+                    <motion.div 
+                        whileHover={{ y: -5, scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="glass-morphism p-8 rounded-[2.5rem] border-emerald-500/20 hover:border-emerald-400 group relative transition-all overflow-hidden"
+                    >
+                        <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <Scan className="w-32 h-32 text-emerald-400" />
+                        </div>
+                        <div className="flex items-center gap-6 relative z-10">
+                            <div className="w-20 h-20 rounded-3xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-all">
+                                <Scan className="w-10 h-10 text-emerald-400" />
+                            </div>
+                            <div>
+                                <h4 className="text-3xl font-black text-white leading-tight">{t('scan_plastic')}</h4>
+                                <p className="text-emerald-100/40 font-medium">AI Discovery & Blockchain Minting</p>
+                            </div>
+                        </div>
+                    </motion.div>
+                </Link>
+
+                <Link to="/user/marketplace">
+                    <motion.div 
+                        whileHover={{ y: -5, scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="glass-morphism p-8 rounded-[2.5rem] border-purple-500/20 hover:border-purple-400 group relative transition-all overflow-hidden"
+                    >
+                        <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <Store className="w-32 h-32 text-purple-400" />
+                        </div>
+                        <div className="flex items-center gap-6 relative z-10">
+                            <div className="w-20 h-20 rounded-3xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 group-hover:bg-purple-500/20 transition-all">
+                                <Store className="w-10 h-10 text-purple-400" />
+                            </div>
+                            <div>
+                                <h4 className="text-3xl font-black text-white leading-tight">{t('marketplace')}</h4>
+                                <p className="text-purple-100/40 font-medium">Exchange Credits for Rewards</p>
+                            </div>
+                        </div>
+                    </motion.div>
+                </Link>
             </div>
 
             {/* ── Stat Cards ── */}

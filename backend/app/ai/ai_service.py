@@ -26,6 +26,14 @@ except ImportError:
     PIL_AVAILABLE = False
     print("[AI] PIL not available — using pure random mock")
 
+# Try TensorFlow — graceful skip if not installed
+try:
+    import tensorflow as tf
+    TF_AVAILABLE = True
+except ImportError:
+    TF_AVAILABLE = False
+    print("[AI] TensorFlow not available — using heuristics only")
+
 # ── Constants ─────────────────────────────────────────────────────────────────
 PLASTIC_CLASSES = ["PET", "HDPE", "PVC", "LDPE", "PP", "PS"]
 
@@ -144,7 +152,20 @@ def _pure_random_result(fraud_score: float = 0.03, fraud_flags: list = []) -> di
 # ── Main Service ──────────────────────────────────────────────────────────────
 class PlasticAI:
     def __init__(self):
-        mode = "PIL heuristics" if PIL_AVAILABLE else "random mock"
+        self.model = None
+        if TF_AVAILABLE:
+            try:
+                # Placeholder for model loading
+                model_path = os.path.join(os.path.dirname(__file__), "models", "plastic_model.h5")
+                if os.path.exists(model_path):
+                    self.model = tf.keras.models.load_model(model_path)
+                    print(f"[AI] TensorFlow model loaded from {model_path}")
+                else:
+                    print("[AI] TensorFlow available but model file not found. Using heuristics.")
+            except Exception as e:
+                print(f"[AI] Failed to load TensorFlow model: {e}")
+
+        mode = "TensorFlow + Heuristics" if TF_AVAILABLE else ("PIL heuristics" if PIL_AVAILABLE else "random mock")
         print(f"[AI] Plastic detection engine ready ({mode})")
 
     def verify_plastic(self, image_bytes: bytes) -> dict:

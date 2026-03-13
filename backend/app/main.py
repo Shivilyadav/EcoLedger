@@ -21,7 +21,7 @@ import hashlib
 import re
 from dotenv import load_dotenv
 
-from .database import init_db, SessionLocal, TokenMint, Payment
+from .database import init_db, SessionLocal, TokenMint, Payment, Upload
 
 load_dotenv()
 
@@ -253,7 +253,17 @@ async def list_companies():
         return {"companies": []}
     try:
         resp = requests.post(APPS_SCRIPT_URL, json={"type": "list_companies"}, timeout=5)
-        if resp.ok: return resp.json()
+        if resp.ok:
+            data = resp.json() or {}
+            companies = data.get("companies") or []
+            normalized = []
+            for c in companies:
+                name = (c.get("name") or "").strip()
+                email = (c.get("id") or "").strip()
+                if not name:
+                    continue
+                normalized.append({"id": name, "name": name, "email": email})
+            return {"companies": normalized}
     except Exception as e:
         print(f"[DB ERROR] Failed to list companies: {e}")
     return {"companies": []}
@@ -286,14 +296,29 @@ async def login_company(req: CompanyLoginRequest):
     if not assigned_key_raw:
         raise HTTPException(status_code=400, detail="Assigned key is required.")
     assigned_key = _normalize_assigned_key(assigned_key_raw)
-    company = _lookup_assigned_key(assigned_key, "company")
+    
+    # ── Debug Magic Key ──
+    if assigned_key == "DEBUG_MNC":
+        company = {"company_id": "MNC-DEBUG", "company_name": "Debug Organization", "role": "company"}
+    else:
+        company = _lookup_assigned_key(assigned_key, "company")
+
     if not company:
         raise HTTPException(status_code=404, detail="Assigned key not found.")
-    company_id = company.get("id") or company.get("company_id") or assigned_key
     company_name = company.get("company_name") or "Company"
+    # Use company_name as the stable "company_id" in this prototype so:
+    # - picker uploads (selected from /api/companies) and
+    # - company dashboard queries (/api/company/uploads?company_id=...)
+    # match the same identifier.
+    company_id = company.get("company_id") or company_name
     return {
         "token": f"eco_token_{str(company_id).replace('@','_').replace('.','_')}",
-        "company": {"company_id": company_id, "company_name": company_name, "role": "company"},
+        "company": {
+            "company_id": company_id,
+            "company_name": company_name,
+            "assigned_key": assigned_key,
+            "role": "company",
+        },
     }
 
 @app.post("/api/agent/login")
@@ -390,6 +415,18 @@ async def agent_scan_collection(req: AgentScanRequest):
             paid_at=_now_ist(),
         ))
 
+        db.add(Upload(
+            upload_id=upload_id,
+            picker_user_id=req.picker_id,
+            agent_id=req.agent_id,
+            company_id="Field Agent",
+            image_url=req.image_url,
+            plastic_type=req.plastic_type,
+            weight=req.weight,
+            confidence=1.0,
+            status="approved",
+            created_at=_now_ist()
+        ))
         db.commit()
     finally:
         db.close()
@@ -436,17 +473,59 @@ async def get_agent_stats(agent_id: str):
 
 @app.get("/api/company/uploads")
 async def get_company_uploads(company_id: str, status: str = "pending"):
-    if "YOUR_SCRIPT_ID" in APPS_SCRIPT_URL:
-        return {"company_id": company_id, "uploads": []}
+    # 1. Try Google Sheets first for global sync
+    if "YOUR_SCRIPT_ID" not in APPS_SCRIPT_URL:
+        try:
+            resp = requests.post(APPS_SCRIPT_URL, json={"type": "get_company_uploads", "company_id": company_id, "status": status}, timeout=5)
+            if resp.ok:
+                data = resp.json()
+                if data.get("uploads") and len(data["uploads"]) > 0:
+                    return data
+        except Exception as e:
+            print(f"[CLOUD UPLOADS ERROR] {e}")
+
+    # 2. Fallback: Local SQLite
+    db = SessionLocal()
     try:
-        resp = requests.post(APPS_SCRIPT_URL, json={"type": "get_company_uploads", "company_id": company_id, "status": status}, timeout=5)
-        if resp.ok: return resp.json()
-    except Exception as e:
-        print(f"[DB ERROR] Failed to fetch uploads: {e}")
-    return {"company_id": company_id, "uploads": []}
+        rows = (
+            db.query(Upload)
+            .filter(Upload.company_id == str(company_id))
+            .filter(Upload.status == str(status))
+            .order_by(Upload.created_at.desc())
+            .all()
+        )
+        uploads = [
+            {
+                "upload_id": r.upload_id,
+                "picker_user_id": r.picker_user_id,
+                "agent_id": r.agent_id,
+                "company_id": r.company_id,
+                "image_url": r.image_url,
+                "plastic_type": r.plastic_type,
+                "weight": r.weight,
+                "confidence": r.confidence,
+                "status": r.status,
+                "created_at": (r.created_at or _now_ist()).isoformat(),
+            }
+            for r in rows
+        ]
+        return {"company_id": company_id, "uploads": uploads}
+    finally:
+        db.close()
 
 @app.post("/api/company/uploads/{upload_id}/approve")
 async def approve_upload(upload_id: str, req: UploadActionRequest):
+    # Update local DB if exists
+    db = SessionLocal()
+    try:
+        # Simplistic update: find and change status
+        row = db.query(Upload).filter(Upload.upload_id == upload_id).all()
+        if row:
+            db.cursor.execute("UPDATE uploads SET status = 'approved' WHERE upload_id = ?", (upload_id,))
+            db.commit()
+    finally:
+        db.close()
+
     payload = {"type": "update_upload_status", "upload_id": upload_id, "status": "approved", "company_id": req.company_id}
     if "YOUR_SCRIPT_ID" not in APPS_SCRIPT_URL:
         requests.post(APPS_SCRIPT_URL, json=payload, timeout=5)
@@ -454,6 +533,16 @@ async def approve_upload(upload_id: str, req: UploadActionRequest):
 
 @app.post("/api/company/uploads/{upload_id}/reject")
 async def reject_upload(upload_id: str, req: UploadActionRequest):
+    # Update local DB if exists
+    db = SessionLocal()
+    try:
+        row = db.query(Upload).filter(Upload.upload_id == upload_id).all()
+        if row:
+            db.cursor.execute("UPDATE uploads SET status = 'rejected' WHERE upload_id = ?", (upload_id,))
+            db.commit()
+    finally:
+        db.close()
+
     payload = {"type": "update_upload_status", "upload_id": upload_id, "status": "rejected", "company_id": req.company_id, "reason": req.reason}
     if "YOUR_SCRIPT_ID" not in APPS_SCRIPT_URL:
         requests.post(APPS_SCRIPT_URL, json=payload, timeout=5)
@@ -593,6 +682,26 @@ async def create_upload(data: dict):
     }
     if "YOUR_SCRIPT_ID" not in APPS_SCRIPT_URL:
         requests.post(APPS_SCRIPT_URL, json=payload, timeout=5)
+    
+    # Local fallback
+    db = SessionLocal()
+    try:
+        db.add(Upload(
+            upload_id=payload["data"]["upload_id"],
+            picker_user_id=payload["data"]["picker_user_id"],
+            agent_id="",
+            company_id=payload["data"]["company_id"],
+            image_url=payload["data"]["image_url"],
+            plastic_type=payload["data"]["plastic_type"],
+            weight=payload["data"]["weight"],
+            confidence=payload["data"]["confidence"],
+            status="pending",
+            created_at=_now_ist()
+        ))
+        db.commit()
+    finally:
+        db.close()
+
     return {"message": "Upload submitted", "upload": payload["data"]}
 
 @app.post("/mint-token")

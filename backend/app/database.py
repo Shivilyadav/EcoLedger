@@ -74,6 +74,23 @@ def init_db():
         )
     ''')
     
+    # uploads table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS uploads (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            upload_id TEXT UNIQUE,
+            picker_user_id TEXT,
+            agent_id TEXT,
+            company_id TEXT,
+            image_url TEXT,
+            plastic_type TEXT,
+            weight TEXT,
+            confidence REAL DEFAULT 0.0,
+            status TEXT DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
     conn.commit()
     conn.close()
 
@@ -111,6 +128,16 @@ class Payment(metaclass=ModelMeta):
             try:
                 val = self.paid_at.split('.')[0] if '.' in self.paid_at else self.paid_at
                 self.paid_at = datetime.datetime.fromisoformat(val)
+            except: pass
+
+class Upload(metaclass=ModelMeta):
+    __tablename__ = "uploads"
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items(): setattr(self, k, v)
+        if hasattr(self, 'created_at') and isinstance(self.created_at, str):
+            try:
+                val = self.created_at.split('.')[0] if '.' in self.created_at else self.created_at
+                self.created_at = datetime.datetime.fromisoformat(val)
             except: pass
 
 class SessionLocal:
