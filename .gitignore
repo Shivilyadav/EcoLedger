@@ -1,28 +1,27 @@
-### Node & frontend
+# Python
+backend/__pycache__/
+backend/*.py[cod]
+backend/venv/
+backend/.venv/
+backend/*.db
+backend/logs/
+
+# Frontend
 frontend/node_modules/
 frontend/dist/
 frontend/.vite/
+frontend/logs/
+frontend/*.log
 
-### Python & backend
-__pycache__/
-*.py[cod]
-.venv/
-venv/
-
-### Environment / secrets
+# Env / Secret files
 .env
 .env.local
 .env.*
+backend/.env
+frontend/.env
 
-### OS / editor
+# OS / Editor
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
-
-### Root Assets / Misc
-*.jpg
-*.jpeg
-*.avif
-preview.html
-

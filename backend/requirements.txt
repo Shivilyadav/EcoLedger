@@ -13,4 +13,4 @@ web3
 PyMySQL
 google-api-python-client
 google-auth
-tensorflow
+# tensorflow
